@@ -1,40 +1,89 @@
-const PackageRepository = require('../repositories/packageRepository');
+const PackageRepository = require('../repositories/packageRepository')();
 
 exports.get = (req, res, next) => {
-    res.status(201).send('Requisição recebida com sucesso!');
-    // client.get('allVertices', function (err, reply) {
-    //     if (reply) {
-    //         res.send(reply)
-    //     } else {
-    //         console.log('db');
-    //
-    //         VerticeRepository.getAll()
-    //             .then((vertice) => {
-    //                 client.set('allVertices', JSON.stringify(vertice));
-    //                 client.expire('allVertices', 20);
-    //                 res.status(200).send(vertice);
-    //             }).catch(err => res.status(500).send(err))
-    //     }
-    // });
-
+    PackageRepository.findById('5b0d979a3056cc2d50b3b546').then((package) => {
+        var plans = [];
+        // packages.forEach(function (package) {
+        plans.push(package)
+        plans = createNewEdge(package, package.edges, plans);
+        // package.edges.forEach(function (packageEdge) {
+        //     if (!packageEdge)
+        //         return;
+        //     PackageRepository.findById(packageEdge._id).then((edge) => {
+        //         console.log(edge)
+        //         if (!edge)
+        //             return;
+        //         var plan = {
+        //             "name": package.name + " + " + edge.name,
+        //             "type": package.type + " + " + edge.type,
+        //             "value": Number(package.value) + Number(edge.value)
+        //         }
+        //         plans.push(plan)
+        //         edge.edges.forEach(function (edge) {
+        //             var plan = {
+        //                 "name": package.name + " + " + edge.name,
+        //                 "type": package.type + " + " + edge.type,
+        //                 "value": Number(package.value) + Number(edge.value)
+        //             }
+        //             plans.push(plan)
+        //         })
+        //     })
+        // })
+        // })
+        res.status(200).send(plans);
+    }).catch(err => res.status(500).send(err))
 };
 
+createNewPlan = (package, edge, edge2) => {
+    var plan;
+    if (!edge2) {
+        plan = {
+            "name": package.name + " + " + edge.name,
+            "type": package.type + " + " + edge.type,
+            "value": Number(package.value) + Number(edge.value)
+        }
+        console.debug(plan);
+    } else {
+        plan = {
+            "name": package.name + " + " + edge.name + " + " + edge2.name,
+            "type": package.type + " + " + edge.type + " + " + edge2.type,
+            "value": Number(package.value) + Number(edge.value) + Number(edge2.value)
+        }
+    }
+    return plan;
+}
+
+createNewEdge = (parent, edges, plans) => {
+    var plan;
+    for (i = 0; i < parent.edges.length; i++) {
+        plan = createNewPlan(parent, parent.edges[i]);
+        plans.push(plan)
+        if (!edges[i]._id) {
+            PackageRepository.findById(parent.edges[i]._id).then((edge) => {
+                createNewEdge(edge[i], edge, plans);
+            })
+        }
+
+        for (j = i + 1; j < parent.edges.length; j++) {
+            plans.push(createNewPlan(plan, parent.edges[i], parent.edges[j]))
+        }
+    }
+    return plans;
+}
+
 exports.getById = (req, res, next) => {
-    VerticeRepository.getById(req.params.id).then((vertice) => {
-        res.status(200).send(vertice);
+    PackageRepository.findById('5b0d96eced26af3f0078a678').then((package) => {
+        res.status(200).send(package);
     }).catch(err => res.status(500).send(err))
 };
 
 exports.post = (req, res, next) => {
-    const p = req.body;
-    console.log(req.body)
-    VerticeRepository.create(p).then((vertice) => {
-        res.status(200).send(vertice);
+    PackageRepository.create(p).then((package) => {
+        res.status(200).send(package);
     }).catch(err => res.status(500).send(err))
 };
 
 exports.put = (req, res, next) => {
-    const PackageRepository = require('../repositories/packageRepository')();
     var package = {
         name: "teste",
         type: "teste",
@@ -46,7 +95,7 @@ exports.put = (req, res, next) => {
 };
 
 exports.delete = (req, res, next) => {
-    VerticeRepository.delete(req.params.id).then((plan) => {
+    PackageRepository.delete(req.params.id).then((plan) => {
         res.status(200).send('delete succeeded!');
     }).catch(err => console.error.bind(console, `Error ${err}`))
 };
