@@ -1,11 +1,9 @@
 const PackageRepository = require('../repositories/packageRepository')();
-var plans = undefined
+var plans = []
+var addons = []
 
 exports.get = (req, res, next) => {
     PackageRepository.findById('5b0d96eced26af3f0078a678').then((package) => {
-        plans = []
-        createNewPlan(package)
-        recursiveCreateNewEdge(package, package.edges);
     }).catch(err => res.status(500).send(err))
     res.status(200).send(plans);
 };
@@ -15,48 +13,23 @@ function createNewPlan(parent, edge) {
     if (!edge) {
         plan = {
             "name": parent.name,
-            "type": parent.type,
             "value": Number(parent.value)
         }
     } else {
         plan = {
             "name": parent.name + " + " + edge.name,
-            "type": parent.type + " + " + edge.type,
             "value": Number(parent.value) + Number(edge.value)
         }
     }
-    plans.push(plan)
     return plan;
-}
-
-function recursiveCreateNewEdge(parent, edges) {
-    if (!edges) {
-        createNewPlan(parent);
-        return;
-    }
-    for (i = 0; i < edges.length; i++) {
-        var parentTemp = null;
-        parentTemp = createNewPlan(parent, edges[i]);
-        PackageRepository.findById(edges[i]._id, function (err, package) {
-            if (err) throw err;
-            recursiveCreateNewEdge(package, package.edges)
-        });
-        for (j = i + 1; j < edges.length; j++) {
-            planTemp = {
-                "name": parentTemp.name + " + " + edges[j].name,
-                "type": parentTemp.type + " + " + edges[j].type,
-                "value": Number(parentTemp.value) + Number(edges[j].value)
-            }
-            recursiveCreateNewEdge(planTemp, edges[j].edges)
-        }
-    }
-    return plans;
 }
 
 exports.getById = (req, res, next) => {
     PackageRepository.aggregate([
+        // {$match: {name: 'Broadband1'}},
         {$match: {name: 'TV1'}},
-        {$graphLookup:{
+        {
+            $graphLookup: {
                 from: 'packages',
                 startWith: '$_id',
                 connectFromField: 'edges._id',
@@ -64,19 +37,76 @@ exports.getById = (req, res, next) => {
                 as: 'addons'
             }
         }
-    ], function (err, package) {
+    ], function (err, packages) {
         if (err) throw err;
-        console.log(package);
-        res.status(200).send(package);
+        packages.forEach(function (package) {
+            addons = package.addons;
+            plans = [createNewPlan(package)]
+            createRecursivePlan(package)
+        })
+        res.status(200).send(plans);
     })
-    // PackageRepository.aggregate([
-    //     {$match: {_id: '5b0d97ed3056cc2d50b3b548'}},
-    // ]).then(res => console.log(res)).catch(error => console.error('error', error));
-    // PackageRepository.find({_id: '5b0d979a3056cc2d50b3b546'}, function (err, package) {
-    //     if (err) throw err;
-    //     console.log(package.edges);
-    // });
 };
+
+
+function createRecursivePlan(package) {
+    for (let i = 0; i < package.edges.length; i++) {
+        var addon = filterAddon(package.edges[i]._id.toString(), addons, callbackFilterAddon);
+        if (addon) {
+            plans.push(createNewPlan(package, addon))
+            if (addon.edges) {
+                var addonTemp = {
+                    "name": package.name + " + " + addon.name,
+                    "value": getValue(package, callbackGetValue) + getValue(addon, callbackGetValue),
+                    "edges": addon.edges
+                }
+                createRecursivePlan(addonTemp)
+            }
+        }
+        for (let j = i + 1; j < package.edges.length; j++) {
+            var addonSecundary = filterAddon(package.edges[j]._id.toString(), addons, callbackFilterAddon);
+            plan = {
+                "name": package.name + " + " + addon.name + " + " + addonSecundary.name,
+                "value": getValue(package, callbackGetValue) + getValue(addonSecundary, callbackGetValue)
+            }
+            plans.push(plan)
+            if (addon.edges) {
+                var addonTemp = {
+                    "name": addon.name + " + " + addonSecundary.name,
+                    "value": getValue(addon, callbackGetValue) + getValue(addonSecundary, callbackGetValue),
+                    "edges": addon.edges
+                }
+                createRecursivePlan(addonTemp)
+            }
+        }
+
+    }
+}
+
+function getValue(element, callback) {
+    return callbackGetValue(element)
+}
+
+function callbackGetValue(element) {
+    if (!element)
+        return 0
+    var value = Number(element.value)
+    return value ? value : 0
+}
+
+function filterAddon(id, lista, callback) {
+    return callbackFilterAddon(id, lista)
+}
+
+function callbackFilterAddon(id, lista) {
+    var findItem = "";
+    for (let i = 0; i < lista.length; i++) {
+        if (id == lista[i]._id) {
+            findItem = lista[i]
+        }
+    }
+    return findItem
+}
 
 exports.post = (req, res, next) => {
     PackageRepository.create(p).then((package) => {
@@ -87,7 +117,6 @@ exports.post = (req, res, next) => {
 exports.put = (req, res, next) => {
     var package = {
         name: "teste",
-        type: "teste",
         value: "22.25"
     }
     PackageRepository.create(package).then((package) => {
