@@ -1,9 +1,13 @@
 const PackageRepository = require('../repositories/packageRepository')();
 var plans = []
 
-exports.get = (req, res, next) => {
+function compare(a, b) {
+    return parseFloat(a.value) < parseFloat(b.value) ? -1 : parseFloat(a.value) > parseFloat(b.value) ? 1 : 0;
+}
+
+function getPlans(type, callbck) {
     PackageRepository.aggregate([
-        {$match: {type: 'bb'}},
+        {$match: {type: type}},
         {
             $graphLookup: {
                 from: 'packages',
@@ -15,17 +19,12 @@ exports.get = (req, res, next) => {
         }
     ], function (err, packages) {
         if (err) throw err;
-        plans = []
         packages.forEach(function (package) {
             createNewPlan(package, package.addons);
         })
     }).then(function () {
-        res.status(200).send(plans.sort(compare));
+        callbck(plans.sort(compare));
     });
-};
-
-function compare(a, b) {
-    return parseFloat(a.value) < parseFloat(b.value) ? -1 : parseFloat(a.value) > parseFloat(b.value) ? 1 : 0;
 }
 
 function createNewPlan(package, addons, name, value) {
@@ -54,15 +53,17 @@ function addNewPlan(name, value, package) {
         }
     }
     plans.push(newPlan);
-    return (newPlan);
+    return newPlan;
 }
 
-function filterAddon(id, lista) {
+function filterAddon(id, list) {
     var addon = {};
-    for (let i = 0; i < lista.length; i++) {
-        if (id == lista[i]._id) {
-            addon = lista[i];
+    for (let i = 0; i < list.length; i++) {
+        if (id == list[i]._id) {
+            addon = list[i];
         }
     }
     return addon
 }
+
+module.exports = {addNewPlan, filterAddon, getPlans};
