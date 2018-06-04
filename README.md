@@ -2,10 +2,10 @@
 Sistema voltado para retornar todos os planos de acordo com seu tipo ordenado por valor crescente
 
 ## Tecnologias
-* [Meteor](https://reactjs.org)
-* [NodeJs](https://nodejs.org)
+* [NodeJJ](https://nodejs.org)
 * [Mongodb](https://www.mongodb.com)
 * [ExpressJS](http://expressjs.com)
+* [MochaJS](https://mochajs.org)
 
 ## Getting Started
 
@@ -80,7 +80,3 @@ O sistema possui um banco mongo db com a seguinte estrutura:
     ]}
 	```
 
-
-* Iniciar o mongo local
-```
-C:\"Program Files"\MongoDB\Server\3.6\bin\mongod --dbpath D:\dev\projects\db
