@@ -57,30 +57,18 @@ O sistema possui um banco mongo db com a seguinte estrutura:
 ```
 
     {"_id" : ObjectId(""),
-	```
     "name" : "String",
-	```
     "type" : "String",
-	```
     "value" : Number,
-	```
     "edges" : [
-	```
         {
-		```
             "_id" : ObjectId(""),
-			```
             "value" : Number
-			```
         },
-		```
-        {```
+        {
             "_id" : ObjectId(""),
-			```
             "value" : Number
-			```
         }
-		```
     ]}
 	```
 
