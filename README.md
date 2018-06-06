@@ -1,6 +1,10 @@
 <h1>Api Melhor Plano</h1>
 Sistema voltado para retornar todos os planos de acordo com seu tipo ordenado por valor crescente
 
+## Acesso
+Acesse o sistema através do link abaixo:
+* [Melhor Plano](http://104.236.110.153:3000)
+
 ## Tecnologias
 * [NodeJJ](https://nodejs.org)
 * [Mongodb](https://www.mongodb.com)
