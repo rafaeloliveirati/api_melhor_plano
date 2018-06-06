@@ -6,7 +6,7 @@ Acesse o sistema através do link abaixo:
 * [Melhor Plano](http://104.236.110.153:3000)
 
 ## Dump do mongo
-Acesse o sistema através do link abaixo:
+Baixe o dump através do link abaixo:
 * [Dump Mongo (db_melhor_plano)](https://www.dropbox.com/s/alf3suh1dm4it8t/packages.bson)
 
 ## Tecnologias
